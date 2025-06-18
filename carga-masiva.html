@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carga Masiva - Subir a Drive</title>
+    <title>Carga Masiva - Ingreso de Colaboradores a MP</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -44,18 +44,30 @@
             margin-bottom: 25px;
             font-size: 0.95em;
         }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .file-upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .file-upload-area:hover {
+            border-color: #4CAF50;
         }
         input[type="file"] {
+            display: none; /* Oculta el input de archivo original */
+        }
+        .file-upload-label {
             display: block;
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .file-name {
+            font-weight: bold;
+            color: #333;
         }
         button {
             width: 100%;
@@ -68,6 +80,7 @@
             font-size: 1.1em;
             font-weight: bold;
             transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 10px; /* Espacio después del área de carga */
         }
         button:hover {
             background-color: #45a049;
@@ -141,6 +154,12 @@
             p {
                 font-size: 0.85em;
             }
+            .file-upload-area {
+                padding: 20px;
+            }
+            .file-upload-label {
+                font-size: 1em;
+            }
             button {
                 padding: 12px;
                 font-size: 1em;
@@ -151,14 +170,20 @@
 <body>
 
     <div class="container">
+        <!-- URL proporcionada por el usuario para la imagen de Mercado Pago -->
         <img src="https://upload.wikimedia.org/wikipedia/commons/d/d2/Mercado_Pago_%28Horizontal%29.svg" alt="Logo de Mercado Pago" class="form-header-image">
 
-        <h1>Carga Masiva de Candidatos (CSV a Drive)</h1>
-        <p>Seleccione su archivo CSV para cargarlo directamente a Google Drive. Nuestro sistema lo procesará automáticamente.</p>
+        <h1>Carga Masiva de Candidatos (CSV)</h1>
+        <p>Utilice la plantilla `TEST VIA WEB` de Google Sheets, complete sus registros y descárguela como archivo CSV para cargar aquí.</p>
 
-        <form id="uploadForm">
-            <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
-            <button type="submit" id="submitUploadButton">Subir y Procesar CSV</button>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="file-upload-area" id="fileUploadArea">
+                <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
+                <label for="csvFile" class="file-upload-label">Arrastre y suelte su archivo CSV aquí o haga clic para seleccionarlo.</label>
+                <div class="file-name" id="fileName"></div>
+            </div>
+
+            <button type="submit" id="submitUploadButton" disabled>Subir y Procesar CSV</button>
         </form>
 
         <div id="responseMessage"></div>
@@ -169,25 +194,51 @@
     <script>
         const uploadForm = document.getElementById('uploadForm');
         const csvFileInput = document.getElementById('csvFile');
+        const fileNameDiv = document.getElementById('fileName');
         const submitUploadButton = document.getElementById('submitUploadButton');
         const responseMessageDiv = document.getElementById('responseMessage');
+        const fileUploadArea = document.getElementById('fileUploadArea');
 
-        // URL del Google Apps Script para recibir el archivo CSV
-        // ¡REEMPLAZA ESTO CON LA NUEVA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT para la carga de archivos!
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyORGniozhvME15MdS3CO07tKqfOC-S-GBn5pNax7Ry29U6fMOMNBvbqD5Qsv85it_I-w/exec'; // Esta URL será la misma si actualizas tu Apps Script existente
+        // URL del Google Apps Script para recibir los datos
+        // ¡REEMPLAZA ESTO CON LA ÚLTIMA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT!
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyqZukOn_nVJTBj4-VVKiqKvmaaFd7r-2d1DTHTB6Io4xkU2pkOFYiXhpxibMFE8GImcQ/exec';
 
-        // Deshabilitar botón hasta que se seleccione un archivo
+        // Deshabilitar el botón de envío hasta que se seleccione un archivo
         csvFileInput.addEventListener('change', () => {
             if (csvFileInput.files.length > 0) {
+                fileNameDiv.innerText = `Archivo seleccionado: ${csvFileInput.files[0].name}`;
                 submitUploadButton.disabled = false;
             } else {
+                fileNameDiv.innerText = '';
                 submitUploadButton.disabled = true;
             }
             responseMessageDiv.style.display = 'none'; // Limpiar mensajes anteriores
         });
 
-        uploadForm.addEventListener('submit', async function(e) {
+        // Drag and Drop functionality
+        fileUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
+            fileUploadArea.style.borderColor = '#4CAF50';
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.borderColor = '#ccc';
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#ccc';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                csvFileInput.files = files; // Asigna el archivo arrastrado al input de tipo file
+                // Dispara el evento 'change' del input para que la lógica de habilitar botón se ejecute
+                csvFileInput.dispatchEvent(new Event('change')); 
+            }
+        });
+
+        // Manejar el envío del formulario
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Evita el envío tradicional del formulario
 
             if (csvFileInput.files.length === 0) {
                 displayMessage('Por favor, selecciona un archivo CSV para subir.', 'error');
@@ -197,36 +248,30 @@
             displayMessage('Subiendo y procesando archivo... por favor, espera.', 'loading');
             submitUploadButton.disabled = true;
 
-            const formData = new FormData(uploadForm); // Crea un objeto FormData directamente del formulario
+            const formData = new FormData(uploadForm); // Crea un objeto FormData con el archivo adjunto
 
             try {
                 const response = await fetch(scriptURL, {
                     method: 'POST',
-                    body: formData, // Envía el FormData directamente (no JSON)
-                    // No necesitas 'Content-Type' aquí, el navegador lo configura automáticamente con FormData
-                    // 'mode: no-cors' es implícito o no necesario con FormData si la API de Apps Script lo maneja bien
+                    body: formData, // Envía el FormData directamente
+                    // No es necesario establecer 'Content-Type' aquí, el navegador lo hará automáticamente para FormData
+                    // Y para 'no-cors', la respuesta es opaca, no podemos leer el cuerpo directamente
+                    mode: 'no-cors' // Necesario para evitar problemas de CORS con Apps Script
                 });
 
-                // Apps Script devuelve un texto plano o JSON, dependiendo de tu doPost.
-                // Aquí asumimos que devuelve un mensaje de texto.
-                const resultText = await response.text(); 
-                
-                if (response.ok) { // Verifica si la respuesta HTTP es exitosa (200-299)
-                    // Si Apps Script devuelve un mensaje de éxito, úsalo.
-                    // Ajusta el mensaje final según lo que tu Apps Script realmente devuelva.
-                    displayMessage(`¡Archivo subido y procesado correctamente! ${resultText}`, 'success');
-                    csvFileInput.value = ''; // Limpiar el input de archivo
-                    submitUploadButton.disabled = true;
-                } else {
-                    // Si hay un error HTTP, muestra el mensaje del servidor
-                    displayMessage(`Error al subir el archivo: ${resultText}`, 'error');
-                    submitUploadButton.disabled = false; // Habilitar el botón si hubo un error
-                }
+                // Si la solicitud llega aquí sin errores de red, asumimos que el envío fue exitoso.
+                // El Apps Script devuelve un mensaje de texto.
+                // Sin embargo, con 'no-cors', no podemos leer el cuerpo de la respuesta aquí directamente.
+                // La verificación del éxito real se hará en los registros del Apps Script.
+                displayMessage(`¡Archivo enviado para procesamiento! Revisa tu Google Sheet y los registros de Apps Script para confirmar.`, 'success');
+                csvFileInput.value = ''; // Limpiar el input de archivo
+                fileNameDiv.innerText = ''; // Limpiar el nombre del archivo
+                submitUploadButton.disabled = true; // Mantener deshabilitado hasta nueva selección
 
             } catch (error) {
                 displayMessage(`Error de conexión: ${error.message}. Asegúrate de estar en línea.`, 'error');
                 console.error('Error al subir el archivo:', error);
-                submitUploadButton.disabled = false;
+                submitUploadButton.disabled = false; // Habilitar el botón si hubo un error
             }
         });
 
