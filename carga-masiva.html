@@ -5,7 +5,7 @@
     <title>Carga Masiva - Ingreso de Colaboradores a MP</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <!-- Incluye PapaParse para analizar archivos CSV en el navegador -->
-    <!-- ¡IMPORTANTE!: Asegúrate de que esta línea esté presente y al inicio del head -->
+    <!-- ¡IMPORTANTE!: Esta línea DEBE estar en el head para que se cargue primero -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         body {
@@ -188,125 +188,116 @@
         <button class="back-button" onclick="window.location.href='index.html'">Regresar al Inicio</button>
     </div>
 
-    <!-- Script principal de la página, se carga al final del body para asegurar que los elementos estén listos -->
+    <!-- Script principal de la página. Se carga después de los elementos HTML y después de PapaParse en el head. -->
     <script>
-        // Envolvemos todo el script para que se ejecute solo cuando el DOM esté completamente cargado
-        window.addEventListener('DOMContentLoaded', function() {
-            const csvFileInput = document.getElementById('csvFile');
-            const fileNameDiv = document.getElementById('fileName');
-            const uploadButton = document.getElementById('uploadButton');
-            const responseMessageDiv = document.getElementById('responseMessage');
-            const fileUploadArea = document.getElementById('fileUploadArea');
+        const csvFileInput = document.getElementById('csvFile');
+        const fileNameDiv = document.getElementById('fileName');
+        const uploadButton = document.getElementById('uploadButton');
+        const responseMessageDiv = document.getElementById('responseMessage');
+        const fileUploadArea = document.getElementById('fileUploadArea');
 
-            // URL del Google Apps Script para recibir los datos
-            // ¡REEMPLAZA ESTO CON LA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT!
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzUdIqjQFOF-lU7UYvGNPe7rhHWCdsR681cTjwVTDupcj29eIQIjXD16vhV8BEi8YHP/exec'; // Asegúrate de que esta sea tu URL correcta
+        // URL del Google Apps Script para recibir los datos
+        // ¡REEMPLAZA ESTO CON LA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT!
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzUdIqjQFOF-lU7UYvGNPe7rhHWCdsR681cTjwVTDupcj29eIQIjXD16vhV8BEi8YHP/exec'; // Asegúrate de que esta sea tu URL correcta
 
-            let parsedCsvData = []; // Para almacenar los datos del CSV parseados
+        let parsedCsvData = []; // Para almacenar los datos del CSV parseados
 
-            // Drag and Drop functionality
-            fileUploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                fileUploadArea.style.borderColor = '#4CAF50';
-            });
+        // Drag and Drop functionality
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#4CAF50';
+        });
 
-            fileUploadArea.addEventListener('dragleave', () => {
-                fileUploadArea.style.borderColor = '#ccc';
-            });
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.borderColor = '#ccc';
+        });
 
-            fileUploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                fileUploadArea.style.borderColor = '#ccc';
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    csvFileInput.files = files;
-                    handleFileSelect(files[0]);
-                }
-            });
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#ccc';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                csvFileInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
 
-            // Handle file selection
-            csvFileInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    handleFileSelect(file);
-                }
-            });
+        // Handle file selection
+        csvFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                handleFileSelect(file);
+            }
+        });
 
-            function handleFileSelect(file) {
-                fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
-                responseMessageDiv.style.display = 'none'; // Clear any previous messages
-                parsedCsvData = []; // Reset parsed data
+        function handleFileSelect(file) {
+            fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
+            responseMessageDiv.style.display = 'none'; // Clear any previous messages
+            parsedCsvData = []; // Reset parsed data
 
-                // Usar PapaParse para analizar el CSV
-                // El error "PapaParse is not defined" ocurre si PapaParse no está cargado aquí
-                // Envolviendo el script en DOMContentLoaded debería solucionar esto
-                PapaParse.parse(file, {
-                    header: true, // Asume que la primera fila es el encabezado
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.errors.length > 0) {
-                            displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
-                            uploadButton.disabled = true;
-                        } else if (results.data.length === 0) {
-                            displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
-                            uploadButton.disabled = true;
-                        } else {
-                            parsedCsvData = results.data;
-                            // Opcional: Depuración, puedes descomentar para ver los datos parseados en la consola
-                            // console.log('Datos CSV parseados:', parsedCsvData);
+            // Usar PapaParse para analizar el CSV
+            // En este punto, PapaParse debería estar definido si todo se cargó correctamente.
+            PapaParse.parse(file, {
+                header: true, // Asume que la primera fila es el encabezado
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.errors.length > 0) {
+                        displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
+                        uploadButton.disabled = true;
+                    } else if (results.data.length === 0) {
+                        displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
+                        uploadButton.disabled = true;
+                    } else {
+                        parsedCsvData = results.data;
+                        // Opcional: Depuración, puedes descomentar para ver los datos parseados en la consola
+                        // console.log('Datos CSV parseados:', parsedCsvData);
 
-                            displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
-                            uploadButton.disabled = false; // Habilitar el botón de carga
-                        }
+                        displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
+                        uploadButton.disabled = false; // Habilitar el botón de carga
                     }
-                });
-            }
-
-            // Función para mostrar mensajes de estado
-            function displayMessage(message, type) {
-                responseMessageDiv.innerText = message;
-                responseMessageDiv.classList.remove('success', 'error', 'loading');
-                responseMessageDiv.style.display = 'block';
-                if (type) {
-                    responseMessageDiv.classList.add(type);
-                }
-            }
-
-            // Handle upload button click
-            uploadButton.addEventListener('click', async () => {
-                if (parsedCsvData.length === 0) {
-                    displayMessage('No hay datos para cargar. Por favor, seleccione un archivo CSV primero.', 'error');
-                    return;
-                }
-
-                displayMessage('Enviando datos masivos... por favor, espera. Esto puede tardar unos segundos.', 'loading');
-                uploadButton.disabled = true; // Deshabilitar para evitar múltiples envíos
-
-                try {
-                    // Envía los datos parseados como JSON al Apps Script
-                    const response = await fetch(scriptURL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Necesario para evitar problemas de CORS
-                        headers: {
-                            'Content-Type': 'application/json', // Indicar que el cuerpo es JSON
-                        },
-                        body: JSON.stringify(parsedCsvData) // Convertir el array de objetos a una cadena JSON
-                    });
-
-                    // Si no hay errores en la red (debido a 'no-cors', la respuesta HTTP siempre será opaca)
-                    // Asumimos éxito si no hay error de red.
-                    displayMessage(`¡Carga masiva completada! Se registraron ${parsedCsvData.length} candidatos correctamente.`, 'success');
-                    csvFileInput.value = ''; // Limpiar el input de archivo
-                    fileNameDiv.innerText = ''; // Limpiar el nombre del archivo
-                    uploadButton.disabled = true; // Mantener deshabilitado hasta nueva selección
-                    parsedCsvData = []; // Limpiar datos parseados
-                } catch (error) {
-                    displayMessage(`Error al cargar datos masivos: ${error.message}. Por favor, revisa la consola para más detalles.`, 'error');
-                    console.error('Error en la carga masiva:', error);
-                    uploadButton.disabled = false; // Habilitar el botón si hubo un error para reintentar
                 }
             });
-        }); // Cierra el addEventListener para DOMContentLoaded
-    </script>
-</body>
-</html>
+        }
+
+        // Función para mostrar mensajes de estado
+        function displayMessage(message, type) {
+            responseMessageDiv.innerText = message;
+            responseMessageDiv.classList.remove('success', 'error', 'loading');
+            responseMessageDiv.style.display = 'block';
+            if (type) {
+                responseMessageDiv.classList.add(type);
+            }
+        }
+
+        // Handle upload button click
+        uploadButton.addEventListener('click', async () => {
+            if (parsedCsvData.length === 0) {
+                displayMessage('No hay datos para cargar. Por favor, seleccione un archivo CSV primero.', 'error');
+                return;
+            }
+
+            displayMessage('Enviando datos masivos... por favor, espera. Esto puede tardar unos segundos.', 'loading');
+            uploadButton.disabled = true; // Deshabilitar para evitar múltiples envíos
+
+            try {
+                // Envía los datos parseados como JSON al Apps Script
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Necesario para evitar problemas de CORS
+                    headers: {
+                        'Content-Type': 'application/json', // Indicar que el cuerpo es JSON
+                    },
+                    body: JSON.stringify(parsedCsvData) // Convertir el array de objetos a una cadena JSON
+                });
+
+                // Si no hay errores en la red (debido a 'no-cors', la respuesta HTTP siempre será opaca)
+                // Asumimos éxito si no hay error de red.
+                displayMessage(`¡Carga masiva completada! Se registraron ${parsedCsvData.length} candidatos correctamente.`, 'success');
+                csvFileInput.value = ''; // Limpiar el input de archivo
+                fileNameDiv.innerText = ''; // Limpiar el nombre del archivo
+                uploadButton.disabled = true; // Mantener deshabilitado hasta nueva selección
+                parsedCsvData = []; // Limpiar datos parseados
+            } catch (error) {
+                displayMessage(`Error al cargar datos masivos: ${error.message}. Por favor, revisa la consola para más detalles.`, 'error');
+                console.error('Error en la carga masiva:', error);
+                uploadButton.disabled = false; // Habilitar el botón si hubo un error para reintentar
