@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carga Masiva - Ingreso de Colaboradores a MP</title>
+    <title>Carga Masiva - Subir a Drive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -44,30 +44,18 @@
             margin-bottom: 25px;
             font-size: 0.95em;
         }
-        .file-upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.3s ease;
-            margin-bottom: 20px;
-        }
-        .file-upload-area:hover {
-            border-color: #4CAF50;
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         input[type="file"] {
-            display: none; /* Oculta el input de archivo original */
-        }
-        .file-upload-label {
             display: block;
-            font-size: 1.1em;
-            color: #555;
-            margin-bottom: 10px;
-        }
-        .file-name {
-            font-weight: bold;
-            color: #333;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
         }
         button {
             width: 100%;
@@ -80,7 +68,6 @@
             font-size: 1.1em;
             font-weight: bold;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            margin-top: 10px; /* Espacio después del área de carga */
         }
         button:hover {
             background-color: #45a049;
@@ -88,6 +75,10 @@
         }
         button:active {
             transform: translateY(0);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
 
         #responseMessage {
@@ -150,12 +141,6 @@
             p {
                 font-size: 0.85em;
             }
-            .file-upload-area {
-                padding: 20px;
-            }
-            .file-upload-label {
-                font-size: 1em;
-            }
             button {
                 padding: 12px;
                 font-size: 1em;
@@ -166,182 +151,94 @@
 <body>
 
     <div class="container">
-        <!-- URL proporcionada por el usuario para la imagen de Mercado Pago -->
         <img src="https://upload.wikimedia.org/wikipedia/commons/d/d2/Mercado_Pago_%28Horizontal%29.svg" alt="Logo de Mercado Pago" class="form-header-image">
 
-        <h1>Carga Masiva de Candidatos (CSV)</h1>
-        <p>Utilice la plantilla `TEST VIA WEB` de Google Sheets, complete sus registros y descárguela como archivo CSV para cargar aquí.</p>
+        <h1>Carga Masiva de Candidatos (CSV a Drive)</h1>
+        <p>Seleccione su archivo CSV para cargarlo directamente a Google Drive. Nuestro sistema lo procesará automáticamente.</p>
 
-        <div class="file-upload-area" id="fileUploadArea">
-            <input type="file" id="csvFile" accept=".csv">
-            <label for="csvFile" class="file-upload-label">Arrastre y suelte su archivo CSV aquí o haga clic para seleccionarlo.</label>
-            <div id="fileName"></div>
-        </div>
-
-        <button id="uploadButton" disabled>Cargar Registros</button>
+        <form id="uploadForm">
+            <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
+            <button type="submit" id="submitUploadButton">Subir y Procesar CSV</button>
+        </form>
 
         <div id="responseMessage"></div>
 
         <button class="back-button" onclick="window.location.href='index.html'">Regresar al Inicio</button>
     </div>
 
-    <!-- Incluye PapaParse para analizar archivos CSV en el navegador -->
-    <!-- ¡IMPORTANTE!: Esta línea ahora está al final del body, ANTES de tu script principal -->
-    <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
-
-    <!-- Script principal de la página. Se carga al final del body para asegurar que los elementos estén listos -->
     <script>
-        console.log("Script principal de la página iniciado."); // Debug: Script principal cargado
+        const uploadForm = document.getElementById('uploadForm');
+        const csvFileInput = document.getElementById('csvFile');
+        const submitUploadButton = document.getElementById('submitUploadButton');
+        const responseMessageDiv = document.getElementById('responseMessage');
 
-        // Todo el código de tu aplicación se ejecuta DESPUÉS de que la página entera haya cargado.
-        window.onload = function() {
-            console.log("window.onload disparado. Iniciando configuración de listeners.");
+        // URL del Google Apps Script para recibir el archivo CSV
+        // ¡REEMPLAZA ESTO CON LA NUEVA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT para la carga de archivos!
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzUdIqjQFOF-lU7UYvGNPe7rhHWCdsR681cTjwVTDupcj29eIQIjXD16vhV8BEi8YHP/exec'; // Esta URL será la misma si actualizas tu Apps Script existente
 
-            // Verificación inicial de PapaParse
-            if (typeof PapaParse === 'undefined') {
-                console.error("CRÍTICO: PapaParse NO está definido al iniciar window.onload. La librería no se cargó correctamente.");
-                const responseMessageDiv = document.getElementById('responseMessage');
-                const uploadButton = document.getElementById('uploadButton');
-                if (responseMessageDiv) {
-                    responseMessageDiv.style.display = 'block';
-                    responseMessageDiv.style.color = 'red';
-                    responseMessageDiv.innerText = 'Error crítico: La librería de procesamiento CSV no se pudo cargar. Las funcionalidades de carga masiva están deshabilitadas.';
-                }
-                if (uploadButton) {
-                    uploadButton.disabled = true;
-                }
-                return; // Detener la ejecución si PapaParse no está disponible
+        // Deshabilitar botón hasta que se seleccione un archivo
+        csvFileInput.addEventListener('change', () => {
+            if (csvFileInput.files.length > 0) {
+                submitUploadButton.disabled = false;
             } else {
-                console.log("PapaParse está definido correctamente después de window.onload.");
+                submitUploadButton.disabled = true;
+            }
+            responseMessageDiv.style.display = 'none'; // Limpiar mensajes anteriores
+        });
+
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (csvFileInput.files.length === 0) {
+                displayMessage('Por favor, selecciona un archivo CSV para subir.', 'error');
+                return;
             }
 
-            // Referencias a elementos del DOM
-            const csvFileInput = document.getElementById('csvFile');
-            const fileNameDiv = document.getElementById('fileName');
-            const uploadButton = document.getElementById('uploadButton');
-            const responseMessageDiv = document.getElementById('responseMessage');
-            const fileUploadArea = document.getElementById('fileUploadArea');
+            displayMessage('Subiendo y procesando archivo... por favor, espera.', 'loading');
+            submitUploadButton.disabled = true;
 
-            // URL del Google Apps Script para recibir los datos
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzUdIqjQFOF-lU7UYvGNPe7rhHWCdsR681cTjwVTDupcj29eIQIjXD16vhV8BEi8YHP/exec'; // Asegúrate de que esta sea tu URL correcta
-            let parsedCsvData = []; // Para almacenar los datos del CSV parseados
+            const formData = new FormData(uploadForm); // Crea un objeto FormData directamente del formulario
 
-            // Listener de clic para el área de carga para forzar la apertura del selector de archivos
-            fileUploadArea.addEventListener('click', () => {
-                console.log("Área de carga clicada. Abriendo selector de archivos."); // Debug
-                csvFileInput.click(); // Simula un clic en el input de tipo file
-            });
-
-            // Drag and Drop functionality
-            fileUploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault(); // Previene el comportamiento por defecto de dragover
-                console.log("Evento dragover detectado."); // Debug
-                fileUploadArea.style.borderColor = '#4CAF50';
-            });
-
-            fileUploadArea.addEventListener('dragleave', () => {
-                console.log("Evento dragleave detectado."); // Debug
-                fileUploadArea.style.borderColor = '#ccc';
-            });
-
-            fileUploadArea.addEventListener('drop', (e) => {
-                e.preventDefault(); // Previene el comportamiento por defecto de drop
-                console.log("Evento drop detectado."); // Debug
-                fileUploadArea.style.borderColor = '#ccc';
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    csvFileInput.files = files;
-                    handleFileSelect(files[0]);
-                }
-            });
-
-            // Handle file selection (cuando se selecciona un archivo, ya sea por click o drag/drop)
-            csvFileInput.addEventListener('change', (event) => {
-                console.log('Evento change del input de archivo disparado.'); // Debug
-                const file = event.target.files[0];
-                if (file) {
-                    handleFileSelect(file);
-                } else {
-                    console.log('No se seleccionó ningún archivo.'); // Debug
-                }
-            });
-
-            function handleFileSelect(file) {
-                console.log('handleFileSelect - Archivo seleccionado:', file.name, file.size, file.type); // Debug 1
-                fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
-                responseMessageDiv.style.display = 'block'; // Mostrar mensaje
-                responseMessageDiv.style.color = 'orange';
-                responseMessageDiv.innerText = 'Procesando CSV...';
-                
-                // Usar PapaParse para analizar el CSV
-                PapaParse.parse(file, {
-                    header: true, // Asume que la primera fila es el encabezado
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        console.log('PapaParse Complete Callback - Resultados:', results); // Debug 2
-                        if (results.errors.length > 0) {
-                            console.error('PapaParse Errores:', results.errors); // Debug 3
-                            displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
-                            uploadButton.disabled = true;
-                        } else if (results.data.length === 0) {
-                            displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
-                            uploadButton.disabled = true;
-                        } else {
-                            parsedCsvData = results.data;
-                            console.log('CSV parseado exitosamente. Registros:', parsedCsvData.length, parsedCsvData); // Debug 4
-
-                            displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
-                            uploadButton.disabled = false; // Habilitar el botón de carga
-                        }
-                    }
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: formData, // Envía el FormData directamente (no JSON)
+                    // No necesitas 'Content-Type' aquí, el navegador lo configura automáticamente con FormData
+                    // 'mode: no-cors' es implícito o no necesario con FormData si la API de Apps Script lo maneja bien
                 });
-            }
 
-            // Función para mostrar mensajes de estado
-            function displayMessage(message, type) {
-                responseMessageDiv.innerText = message;
-                responseMessageDiv.classList.remove('success', 'error', 'loading');
-                responseMessageDiv.style.display = 'block';
-                if (type) {
-                    responseMessageDiv.classList.add(type);
-                }
-            }
-
-            // Handle upload button click
-            uploadButton.addEventListener('click', async () => {
-                console.log('Botón Cargar Registros clicado.'); // Debug
-                if (parsedCsvData.length === 0) {
-                    displayMessage('No hay datos para cargar. Por favor, seleccione un archivo CSV primero.', 'error');
-                    return;
-                }
-
-                displayMessage('Enviando datos masivos... por favor, espera. Esto puede tardar unos segundos.', 'loading');
-                uploadButton.disabled = true; // Deshabilitar para evitar múltiples envíos
-
-                try {
-                    const response = await fetch(scriptURL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Necesario para evitar problemas de CORS
-                        headers: {
-                            'Content-Type': 'application/json', // Indicar que el cuerpo es JSON
-                        },
-                            body: JSON.stringify(parsedCsvData) // Convertir el array de objetos a una cadena JSON
-                    });
-
-                    // Si no hay errores en la red (debido a 'no-cors', la respuesta HTTP siempre será opaca)
-                    // Asumimos éxito si no hay error de red.
-                    displayMessage(`¡Carga masiva completada! Se registraron ${parsedCsvData.length} candidatos correctamente.`, 'success');
+                // Apps Script devuelve un texto plano o JSON, dependiendo de tu doPost.
+                // Aquí asumimos que devuelve un mensaje de texto.
+                const resultText = await response.text(); 
+                
+                if (response.ok) { // Verifica si la respuesta HTTP es exitosa (200-299)
+                    // Si Apps Script devuelve un mensaje de éxito, úsalo.
+                    // Ajusta el mensaje final según lo que tu Apps Script realmente devuelva.
+                    displayMessage(`¡Archivo subido y procesado correctamente! ${resultText}`, 'success');
                     csvFileInput.value = ''; // Limpiar el input de archivo
-                    fileNameDiv.innerText = '';
-                    uploadButton.disabled = true;
-                    parsedCsvData = [];
-                } catch (error) {
-                    displayMessage(`Error al cargar datos masivos: ${error.message}. Por favor, revisa la consola para más detalles.`, 'error');
-                    console.error('Error en la carga masiva:', error);
-                    uploadButton.disabled = false;
+                    submitUploadButton.disabled = true;
+                } else {
+                    // Si hay un error HTTP, muestra el mensaje del servidor
+                    displayMessage(`Error al subir el archivo: ${resultText}`, 'error');
+                    submitUploadButton.disabled = false; // Habilitar el botón si hubo un error
                 }
-            });
-        }; // Cierra window.onload
+
+            } catch (error) {
+                displayMessage(`Error de conexión: ${error.message}. Asegúrate de estar en línea.`, 'error');
+                console.error('Error al subir el archivo:', error);
+                submitUploadButton.disabled = false;
+            }
+        });
+
+        // Función para mostrar mensajes de estado
+        function displayMessage(message, type) {
+            responseMessageDiv.innerText = message;
+            responseMessageDiv.classList.remove('success', 'error', 'loading');
+            responseMessageDiv.style.display = 'block';
+            if (type) {
+                responseMessageDiv.classList.add(type);
+            }
+        }
     </script>
 </body>
 </html>
