@@ -170,7 +170,7 @@
 
     <div class="container">
         <!-- URL proporcionada por el usuario para la imagen de Mercado Pago -->
-        <img src="https://finanzasycredito.mx/sites/finanzasycredito.mx/files/2021-09/mercadopago-logo.png" alt="Logo de Mercado Pago" class="form-header-image">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d2/Mercado_Pago_%28Horizontal%29.svg" alt="Logo de Mercado Pago" class="form-header-image">
 
         <h1>Carga Masiva de Candidatos (CSV)</h1>
         <p>Utilice la plantilla `TEST VIA WEB` de Google Sheets, complete sus registros y descárguela como archivo CSV para cargar aquí.</p>
@@ -188,7 +188,7 @@
         <button class="back-button" onclick="window.location.href='index.html'">Regresar al Inicio</button>
     </div>
 
-    <!-- Script principal de la página. Se carga después de los elementos HTML y después de PapaParse en el head. -->
+    <!-- Script principal de la página. Se carga al final del body para asegurar que los elementos estén listos -->
     <script>
         const csvFileInput = document.getElementById('csvFile');
         const fileNameDiv = document.getElementById('fileName');
@@ -203,8 +203,9 @@
         let parsedCsvData = []; // Para almacenar los datos del CSV parseados
 
         // Drag and Drop functionality
+        // Estas líneas son CRÍTICAS para prevenir el comportamiento por defecto del navegador (abrir/guardar archivo)
         fileUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Previene el comportamiento por defecto de dragover
             fileUploadArea.style.borderColor = '#4CAF50';
         });
 
@@ -213,7 +214,7 @@
         });
 
         fileUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Previene el comportamiento por defecto de drop
             fileUploadArea.style.borderColor = '#ccc';
             const files = e.dataTransfer.files;
             if (files.length > 0) {
@@ -224,40 +225,45 @@
 
         // Handle file selection
         csvFileInput.addEventListener('change', (event) => {
+            console.log('Evento change del input de archivo disparado.'); // Depuración
             const file = event.target.files[0];
             if (file) {
                 handleFileSelect(file);
+            } else {
+                console.log('No se seleccionó ningún archivo.'); // Depuración
             }
         });
 
-       function handleFileSelect(file) {
-    console.log('handleFileSelect - Archivo seleccionado:', file.name, file.size, file.type); // LINEA A AÑADIR 1
-    fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
-    responseMessageDiv.style.display = 'none'; // Clear any previous messages
-    parsedCsvData = []; // Reset parsed data
+        function handleFileSelect(file) {
+            console.log('handleFileSelect - Archivo seleccionado:', file.name, file.size, file.type); // Depuración 1
+            fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
+            responseMessageDiv.style.display = 'none'; // Clear any previous messages
+            parsedCsvData = []; // Reset parsed data
 
-    // Usar PapaParse para analizar el CSV
-    PapaParse.parse(file, {
-        header: true, // Asume que la primera fila es el encabezado
-        skipEmptyLines: true,
-        complete: function(results) {
-            console.log('PapaParse Complete Callback - Resultados:', results); // LINEA A AÑADIR 2
-            if (results.errors.length > 0) {
-                console.error('PapaParse Errores:', results.errors); // LINEA A AÑADIR 3
-                displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
-                uploadButton.disabled = true;
-            } else if (results.data.length === 0) {
-                displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
-                uploadButton.disabled = true;
-            } else {
-                parsedCsvData = results.data;
-                console.log('CSV parseado exitosamente. Registros:', parsedCsvData.length, parsedCsvData); // LINEA A AÑADIR 4
-                displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
-                uploadButton.disabled = false; // Habilitar el botón de carga
-            }
+            // Usar PapaParse para analizar el CSV
+            // En este punto, PapaParse debería estar definido si todo se cargó correctamente.
+            PapaParse.parse(file, {
+                header: true, // Asume que la primera fila es el encabezado
+                skipEmptyLines: true,
+                complete: function(results) {
+                    console.log('PapaParse Complete Callback - Resultados:', results); // Depuración 2
+                    if (results.errors.length > 0) {
+                        console.error('PapaParse Errores:', results.errors); // Depuración 3
+                        displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
+                        uploadButton.disabled = true;
+                    } else if (results.data.length === 0) {
+                        displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
+                        uploadButton.disabled = true;
+                    } else {
+                        parsedCsvData = results.data;
+                        console.log('CSV parseado exitosamente. Registros:', parsedCsvData.length, parsedCsvData); // Depuración 4
+
+                        displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
+                        uploadButton.disabled = false; // Habilitar el botón de carga
+                    }
+                }
+            });
         }
-    });
-}
 
         // Función para mostrar mensajes de estado
         function displayMessage(message, type) {
@@ -271,6 +277,7 @@
 
         // Handle upload button click
         uploadButton.addEventListener('click', async () => {
+            console.log('Botón Cargar Registros clicado.'); // Depuración
             if (parsedCsvData.length === 0) {
                 displayMessage('No hay datos para cargar. Por favor, seleccione un archivo CSV primero.', 'error');
                 return;
@@ -301,3 +308,8 @@
                 displayMessage(`Error al cargar datos masivos: ${error.message}. Por favor, revisa la consola para más detalles.`, 'error');
                 console.error('Error en la carga masiva:', error);
                 uploadButton.disabled = false; // Habilitar el botón si hubo un error para reintentar
+            }
+        });
+    </script>
+</body>
+</html>
