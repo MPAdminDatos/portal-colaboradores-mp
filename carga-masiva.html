@@ -230,34 +230,34 @@
             }
         });
 
-        function handleFileSelect(file) {
-            fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
-            responseMessageDiv.style.display = 'none'; // Clear any previous messages
-            parsedCsvData = []; // Reset parsed data
+       function handleFileSelect(file) {
+    console.log('handleFileSelect - Archivo seleccionado:', file.name, file.size, file.type); // LINEA A AÑADIR 1
+    fileNameDiv.innerText = `Archivo seleccionado: ${file.name}`;
+    responseMessageDiv.style.display = 'none'; // Clear any previous messages
+    parsedCsvData = []; // Reset parsed data
 
-            // Usar PapaParse para analizar el CSV
-            // En este punto, PapaParse debería estar definido si todo se cargó correctamente.
-            PapaParse.parse(file, {
-                header: true, // Asume que la primera fila es el encabezado
-                skipEmptyLines: true,
-                complete: function(results) {
-                    if (results.errors.length > 0) {
-                        displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
-                        uploadButton.disabled = true;
-                    } else if (results.data.length === 0) {
-                        displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
-                        uploadButton.disabled = true;
-                    } else {
-                        parsedCsvData = results.data;
-                        // Opcional: Depuración, puedes descomentar para ver los datos parseados en la consola
-                        // console.log('Datos CSV parseados:', parsedCsvData);
-
-                        displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
-                        uploadButton.disabled = false; // Habilitar el botón de carga
-                    }
-                }
-            });
+    // Usar PapaParse para analizar el CSV
+    PapaParse.parse(file, {
+        header: true, // Asume que la primera fila es el encabezado
+        skipEmptyLines: true,
+        complete: function(results) {
+            console.log('PapaParse Complete Callback - Resultados:', results); // LINEA A AÑADIR 2
+            if (results.errors.length > 0) {
+                console.error('PapaParse Errores:', results.errors); // LINEA A AÑADIR 3
+                displayMessage(`Error al procesar el CSV: ${results.errors[0].message}`, 'error');
+                uploadButton.disabled = true;
+            } else if (results.data.length === 0) {
+                displayMessage('El archivo CSV está vacío o no contiene datos válidos.', 'error');
+                uploadButton.disabled = true;
+            } else {
+                parsedCsvData = results.data;
+                console.log('CSV parseado exitosamente. Registros:', parsedCsvData.length, parsedCsvData); // LINEA A AÑADIR 4
+                displayMessage(`Archivo "${file.name}" cargado y listo para procesar. Se encontraron ${parsedCsvData.length} registros.`, 'success');
+                uploadButton.disabled = false; // Habilitar el botón de carga
+            }
         }
+    });
+}
 
         // Función para mostrar mensajes de estado
         function displayMessage(message, type) {
