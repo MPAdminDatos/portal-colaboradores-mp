@@ -200,7 +200,7 @@
         const fileUploadArea = document.getElementById('fileUploadArea');
 
         // URL del Google Apps Script para recibir los datos
-        // ¡ACTUALIZADO CON LA ÚLTIMA URL PROPORCIONADA!
+        // ¡ACTUALIZADO CON LA ÚLTIMA URL PROPORCIONADA POR EL USUARIO!
         const scriptURL = 'https://script.google.com/macros/s/AKfycbzAar02gIu4yT7ld0LwthECfklfCGAsNlEiu7I3x6CBhByw0tpuvJQB38lolPCl9s7ujg/exec';
 
         // Deshabilitar el botón de envío hasta que se seleccione un archivo
@@ -256,7 +256,8 @@
                 const response = await fetch(scriptURL, {
                     method: 'POST',
                     body: formData, // Envía el FormData directamente
-                    // mode: 'no-cors' ha sido eliminado, ahora esperamos el manejo de CORS desde Apps Script
+                    // mode: 'no-cors' ha sido eliminado para ver el mensaje de error real del servidor.
+                    // Ahora, el Apps Script DEBE manejar el encabezado Access-Control-Allow-Origin.
                 });
 
                 // Intentamos leer el mensaje de respuesta, incluso si es un error HTTP
