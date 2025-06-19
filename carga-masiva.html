@@ -200,7 +200,7 @@
         const fileUploadArea = document.getElementById('fileUploadArea');
 
         // URL del Google Apps Script para recibir los datos
-        // ¡REEMPLAZA ESTO CON LA ÚLTIMA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT!
+        // ¡ACTUALIZADO CON LA ÚLTIMA URL PROPORCIONADA!
         const scriptURL = 'https://script.google.com/macros/s/AKfycby8d_mLekKR5LQKqwj7TDm_9B4n-S8F8IRelFgQcoZ8oKaZynGueSd0OSDH8hTel_v0Yg/exec';
 
         // Deshabilitar el botón de envío hasta que se seleccione un archivo
@@ -254,24 +254,31 @@
                 const response = await fetch(scriptURL, {
                     method: 'POST',
                     body: formData, // Envía el FormData directamente
-                    // No es necesario establecer 'Content-Type' aquí, el navegador lo hará automáticamente para FormData
-                    // Y para 'no-cors', la respuesta es opaca, no podemos leer el cuerpo directamente
-                    mode: 'no-cors' // Necesario para evitar problemas de CORS con Apps Script
+                    // ¡IMPORTANTE!: 'mode: no-cors' HA SIDO ELIMINADO para ver el mensaje de error real del servidor.
+                    // Puede que veas un error de CORS en la consola del navegador, pero esto es normal en este paso.
+                    // Si tienes errores CORS, eso es normal en este paso y lo depuraremos después si el mensaje de error no se muestra.
                 });
 
-                // Si la solicitud llega aquí sin errores de red, asumimos que el envío fue exitoso.
-                // El Apps Script devuelve un mensaje de texto.
-                // Sin embargo, con 'no-cors', no podemos leer el cuerpo de la respuesta aquí directamente.
-                // La verificación del éxito real se hará en los registros del Apps Script.
-                displayMessage(`¡Archivo enviado para procesamiento! Revisa tu Google Sheet y los registros de Apps Script para confirmar.`, 'success');
+                // Intentamos leer el mensaje de respuesta, incluso si es un error HTTP
+                const resultText = await response.text(); 
+                
+                if (response.ok) { // response.ok es true para status 200-299
+                    // Si el Apps Script devuelve un mensaje de éxito, úsalo.
+                    displayMessage(`¡Archivo subido y procesado correctamente! ${resultText}`, 'success');
+                } else {
+                    // Si hay un error HTTP, muestra el estado y el mensaje del servidor
+                    displayMessage(`Error (${response.status} ${response.statusText || ''}): ${resultText}`, 'error');
+                    console.error('Error al subir el archivo:', response.status, response.statusText, resultText);
+                }
+                
                 csvFileInput.value = ''; // Limpiar el input de archivo
                 fileNameDiv.innerText = ''; // Limpiar el nombre del archivo
-                submitUploadButton.disabled = true; // Mantener deshabilitado hasta nueva selección
+                submitUploadButton.disabled = true; // Deshabilitar hasta nueva selección
 
             } catch (error) {
                 displayMessage(`Error de conexión: ${error.message}. Asegúrate de estar en línea.`, 'error');
-                console.error('Error al subir el archivo:', error);
-                submitUploadButton.disabled = false; // Habilitar el botón si hubo un error
+                console.error('Error de red al enviar el archivo:', error);
+                submitUploadButton.disabled = false; // Habilitar el botón si hubo un error de red
             }
         });
 
