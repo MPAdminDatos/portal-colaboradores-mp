@@ -248,15 +248,15 @@
             displayMessage('Subiendo y procesando archivo... por favor, espera.', 'loading');
             submitUploadButton.disabled = true;
 
-            const formData = new FormData(uploadForm); // Crea un objeto FormData con el archivo adjunto
+            // Creamos un nuevo FormData y *añadimos el archivo explícitamente*
+            const formData = new FormData();
+            formData.append('csvFile', csvFileInput.files[0]); // 'csvFile' debe coincidir con el nombre esperado en Apps Script
 
             try {
                 const response = await fetch(scriptURL, {
                     method: 'POST',
                     body: formData, // Envía el FormData directamente
-                    // ¡IMPORTANTE!: 'mode: no-cors' HA SIDO ELIMINADO para ver el mensaje de error real del servidor.
-                    // Puede que veas un error de CORS en la consola del navegador, pero esto es normal en este paso.
-                    // Si tienes errores CORS, eso es normal en este paso y lo depuraremos después si el mensaje de error no se muestra.
+                    // mode: 'no-cors' ha sido eliminado, ahora esperamos el manejo de CORS desde Apps Script
                 });
 
                 // Intentamos leer el mensaje de respuesta, incluso si es un error HTTP
