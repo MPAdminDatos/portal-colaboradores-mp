@@ -23,7 +23,7 @@
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
+            max-width: 800px; /* Aumentado para mejor visualización del formulario */
             width: 100%;
             text-align: center;
             box-sizing: border-box;
@@ -58,6 +58,7 @@
         }
         .form-group {
             text-align: left;
+            position: relative; /* Para los mensajes de error */
         }
         label {
             display: block;
@@ -69,6 +70,7 @@
         input[type="email"],
         input[type="tel"],
         input[type="date"],
+        input[type="number"], /* Añadido para el campo de edad */
         textarea,
         select {
             width: 100%;
@@ -84,12 +86,65 @@
         input[type="email"]:focus,
         input[type="tel"]:focus,
         input[type="date"]:focus,
+        input[type="number"]:focus,
         textarea:focus,
         select:focus {
             border-color: #4CAF50;
             outline: none;
             box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
+
+        /* Estilo para los mensajes de error */
+        .error-message {
+            color: red;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none; /* Oculto por defecto */
+        }
+        input.invalid, select.invalid {
+            border-color: red; /* Borde rojo para campos inválidos */
+            border-width: 2px;
+        }
+        /* Estilo para los radio buttons */
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px; /* Espacio entre las opciones */
+            padding: 5px; /* Pequeño padding para el borde de validación */
+            border: 1px solid transparent; /* Borde transparente por defecto */
+            border-radius: 8px;
+        }
+        .radio-group.invalid {
+            border-color: red; /* Borde rojo para radio group inválido */
+            border-width: 2px;
+        }
+        .radio-group label {
+            display: inline-flex; /* Para alinear el radio y el texto */
+            align-items: center;
+            margin-bottom: 0; /* Eliminar margen inferior de label individual */
+            font-weight: normal;
+        }
+        .radio-group input[type="radio"] {
+            width: auto; /* Dejar que el radio button ocupe su tamaño natural */
+            margin-right: 8px;
+            /* Estilo para radio buttons */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: 2px solid #999;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            transition: border-color 0.3s, background-color 0.3s;
+            cursor: pointer;
+        }
+        .radio-group input[type="radio"]:checked {
+            border-color: #4CAF50;
+            background-color: #4CAF50;
+            box-shadow: inset 0 0 0 4px white; /* Punto central blanco */
+        }
+
+
         button {
             width: 100%;
             padding: 15px;
@@ -133,8 +188,36 @@
             background-color: #ffffcc;
             color: #a6a600;
         }
+        #submissionStatusMessage { /* Nuevo estilo para el mensaje de restricción de tiempo */
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #ffcccc; /* Rojo claro para advertencia */
+            color: #cc0000; /* Rojo oscuro para el texto */
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Oculto por defecto */
+        }
+
+        .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .action-buttons button {
+            width: auto;
+            padding: 10px 20px;
+            font-size: 0.9em;
+        }
+        .action-buttons button.reset-button {
+            background-color: #6c757d; /* Gris para el botón de reinicio */
+        }
+        .action-buttons button.reset-button:hover {
+            background-color: #5a6268;
+        }
         .back-button {
-            background-color: #007bff;
+            background-color: #007bff; /* Un azul para el botón de regresar */
             margin-top: 20px;
             width: 100%;
             padding: 15px;
@@ -150,7 +233,16 @@
             background-color: #0056b3;
         }
 
-        /* Responsive adjustments */
+
+        /* Media Queries para responsividad */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+        }
         @media (max-width: 480px) {
             body {
                 padding: 15px;
@@ -165,120 +257,446 @@
             p {
                 font-size: 0.85em;
             }
+            label {
+                font-size: 0.9em;
+            }
             input[type="text"],
             input[type="email"],
             input[type="tel"],
             input[type="date"],
+            input[type="number"],
             textarea,
             select,
             button {
                 padding: 12px;
                 font-size: 1em;
             }
+            .radio-group {
+                flex-direction: column; /* Apila las opciones en móvil */
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
+
     <div class="container">
         <!-- URL proporcionada por el usuario para la imagen de Mercado Pago -->
-        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d2/Mercado_Pago_%28Horizontal%29.svg" alt="Logo de Mercado Pago" class="form-header-image">
+        <img src="https://static.wikia.nocookie.net/logopedia/images/d/d2/MercadoPago_%28Horizontal%29.svg/revision/latest?cb=20210404023536&path-prefix=es" alt="Logo de Mercado Pago" class="form-header-image">
+
         <h1>Registro Individual de Candidato</h1>
-        <p>Complete los siguientes campos para registrar un nuevo candidato individualmente en nuestra base de datos.</p>
-        <form name="submit-to-google-sheet" id="contactForm">
+        <p class="form-note">TODAS LAS RESPUESTAS DE ESTE FORMULARIO DEBEN SER INGRESADAS EN MAYÚSCULAS</p>
+
+        <form id="myForm" novalidate> <!-- Añadimos novalidate para controlar las validaciones con JS -->
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="fechaContrato">Fecha Contrato:</label>
-                    <input type="date" id="fechaContrato" name="fechaContrato" required>
+                    <label for="fechaContrato">1. Fecha de firma de contrato (DD/MM/AAAA):</label>
+                    <input type="text" id="fechaContrato" name="fechaContrato" placeholder="DD/MM/AAAA" title="Formato: DD/MM/AAAA" required>
+                    <span class="error-message" id="errorFechaContrato"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="fechaIngreso">Fecha Ingreso:</label>
-                    <input type="date" id="fechaIngreso" name="fechaIngreso" required>
+                    <label for="fechaIngreso">2. Fecha de ingreso (DD/MM/AAAA):</label>
+                    <input type="text" id="fechaIngreso" name="fechaIngreso" placeholder="DD/MM/AAAA" title="Formato: DD/MM/AAAA" required>
+                    <span class="error-message" id="errorFechaIngreso"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="apellidoPaterno">Apellido Paterno:</label>
-                    <input type="text" id="apellidoPaterno" name="apellidoPaterno" required>
+                    <label for="apellidoPaterno">3. Apellido Paterno:</label>
+                    <input type="text" id="apellidoPaterno" name="apellidoPaterno" required oninput="this.value = this.value.toUpperCase()">
+                    <span class="error-message" id="errorApellidoPaterno"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="apellidoMaterno">Apellido Materno:</label>
-                    <input type="text" id="apellidoMaterno" name="apellidoMaterno" required>
+                    <label for="apellidoMaterno">4. Apellido Materno:</label>
+                    <input type="text" id="apellidoMaterno" name="apellidoMaterno" required oninput="this.value = this.value.toUpperCase()">
+                    <span class="error-message" id="errorApellidoMaterno"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="nombre">Nombre(s):</label>
-                    <input type="text" id="nombre" name="nombre" required>
+                    <label for="nombre">5. Nombre(s):</label>
+                    <input type="text" id="nombre" name="nombre" required oninput="this.value = this.value.toUpperCase()">
+                    <span class="error-message" id="errorNombre"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="curp">CURP:</label>
-                    <input type="text" id="curp" name="curp" maxlength="18" required>
+                    <label for="telefono">6. Teléfono del candidato (10 DÍGITOS):</label>
+                    <input type="tel" id="telefono" name="telefono" placeholder="Ej: 5512345678" title="10 dígitos numéricos sin espacios ni guiones" required>
+                    <span class="error-message" id="errorTelefono"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="nss">Número Seguridad Social (NSS):</label>
+                    <label for="email">7. Email del candidato (USUARIO@DOMINIO.TLD):</label>
+                    <input type="email" id="email" name="email" placeholder="ejemplo@dominio.com" required>
+                    <span class="error-message" id="errorEmail"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="curp">8. CURP (18 CARACTERES):</label>
+                    <input type="text" id="curp" name="curp" maxlength="18" required oninput="this.value = this.value.toUpperCase()">
+                    <span class="error-message" id="errorCurp"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="nss">9. Número Seguridad Social (11 DÍGITOS):</label>
                     <input type="text" id="nss" name="nss" maxlength="11" required>
+                    <span class="error-message" id="errorNss"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="telefono">Teléfono Candidato:</label>
-                    <input type="tel" id="telefono" name="telefono" pattern="[0-9]{10}" placeholder="Ej. 1234567890" required>
+                    <label>10. Agencia de contratación:</label>
+                    <div class="radio-group" id="radioGroupAgencia">
+                        <label><input type="radio" name="agenciaContratacion" value="EJECUTANDO IDEAS" required> EJECUTANDO IDEAS</label>
+                        <label><input type="radio" name="agenciaContratacion" value="MARCO MKT"> MARCO MKT</label>
+                        <label><input type="radio" name="agenciaContratacion" value="MAP"> MAP</label>
+                        <label><input type="radio" name="agenciaContratacion" value="MP MARKETING"> MP MARKETING</label>
+                    </div>
+                    <span class="error-message" id="errorAgenciaContratacion"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="email">Email Candidato:</label>
-                    <input type="email" id="email" name="email" required>
+                    <label>11. Región de trabajo:</label>
+                    <div class="radio-group" id="radioGroupRegion">
+                        <label><input type="radio" name="regionTrabajo" value="CENTRO" required> CENTRO</label>
+                        <label><input type="radio" name="regionTrabajo" value="NORTE"> NORTE</label>
+                        <label><input type="radio" name="regionTrabajo" value="OCCIDENTE"> OCCIDENTE</label>
+                        <label><input type="radio" name="regionTrabajo" value="SUR"> SUR</label>
+                    </div>
+                    <span class="error-message" id="errorRegionTrabajo"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="regionTrabajo">Región Trabajo:</label>
-                    <select id="regionTrabajo" name="regionTrabajo" required>
-                        <option value="">Seleccione una región</option>
-                        <option value="BAJIO">BAJIO</option>
-                        <option value="CENTRO">CENTRO</option>
-                        <option value="NORESTE">NORESTE</option>
-                        <option value="NOROESTE">NOROESTE</option>
-                        <option value="OCCIDENTE">OCCIDENTE</option>
-                        <option value="SURESTE">SURESTE</option>
+                    <label for="estadoTrabajo">12. Estado de trabajo:</label>
+                    <select id="estadoTrabajo" name="estadoTrabajo" required>
+                        <option value="">Selecciona un estado</option>
+                        <option value="COAHUILA">COAHUILA</option>
+                        <option value="GUADALAJARA">GUADALAJARA</option>
+                        <option value="MICHOACAN">MICHOACAN</option>
+                        <option value="NAYARIT">NAYARIT</option>
+                        <option value="NUEVO LEON">NUEVO LEON</option>
+                        <option value="OAXACA">OAXACA</option>
+                        <option value="PUEBLA">PUEBLA</option>
+                        <option value="QUERETARO">QUERETARO</option>
+                        <option value="QUINTANA ROO">QUINTANA ROO</option>
+                        <option value="SAN LUIS POTOSI">SAN LUIS POTOSI</option>
+                        <option value="TABASCO">TABASCO</option>
+                        <option value="VDM">VDM</option>
+                        <option value="VERACRUZ">VERACRUZ</option>
+                        <option value="YUCATAN">YUCATAN</option>
                     </select>
+                    <span class="error-message" id="errorEstadoTrabajo"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="estadoTrabajo">Estado Trabajo:</label>
-                    <input type="text" id="estadoTrabajo" name="estadoTrabajo" required>
+                    <label for="ciudadTrabajo">13. Ciudad de trabajo:</label>
+                    <select id="ciudadTrabajo" name="ciudadTrabajo" required>
+                        <option value="">Selecciona una ciudad</option>
+                        <option value="BAHIA DE BANDERAS">BAHIA DE BANDERAS</option>
+                        <option value="CANCUN">CANCUN</option>
+                        <option value="JALISCO">JALISCO</option>
+                        <option value="MERIDA">MERIDA</option>
+                        <option value="MONTERREY">MONTERREY</option>
+                        <option value="MORELIA">MORELIA</option>
+                        <option value="OAXACA">OAXACA</option>
+                        <option value="PLAYA DEL CARMEN">PLAYA DEL CARMEN</option>
+                        <option value="PUEBLA">PUEBLA</option>
+                        <option value="QUERETARO">QUERETARO</option>
+                        <option value="SALTILLO">SALTILLO</option>
+                        <option value="SAN LUIS POTOSI">SAN LUIS POTOSI</option>
+                        <option value="TEPIC">TEPIC</option>
+                        <option value="TORREON">TORREON</option>
+                        <option value="VDM">VDM</option>
+                        <option value="VERACRUZ">VERACRUZ</option>
+                        <option value="VILLAHERMOSA">VILLAHERMOSA</option>
+                        <option value="XALAPA">XALAPA</option>
+                    </select>
+                    <span class="error-message" id="errorCiudadTrabajo"></span>
                 </div>
+
                 <div class="form-group">
-                    <label for="ciudadTrabajo">Ciudad Trabajo:</label>
-                    <input type="text" id="ciudadTrabajo" name="ciudadTrabajo" required>
-                </div>
-                <div class="form-group">
-                    <label for="agenciaContratacion">Agencia Contratación:</label>
-                    <select id="agenciaContratacion" name="agenciaContratacion" required>
-                        <option value="">Seleccione una agencia</option>
+                    <label for="reclutadorProceso">14. Reclutador del proceso:</label>
+                    <select id="reclutadorProceso" name="reclutadorProceso" required>
+                        <option value="">Selecciona un reclutador</option>
+                        <option value="ARACELI">ARACELI</option>
+                        <option value="DIANA">DIANA</option>
+                        <option value="FERNANDA">FERNANDA</option>
+                        <option value="JAQUELIN">JAQUELIN</option>
+                        <option value="JESUS">JESUS</option>
+                        <option value="KARLA">KARLA</option>
+                        <option value="LUIS">LUIS</option>
+                        <option value="YADIRA">YADIRA</option>
+                        <option value="YOSHIEL">YOSHIEL</option>
                         <option value="EJECUTANDO IDEAS">EJECUTANDO IDEAS</option>
-                        <option value="FUERZA LABORAL">FUERZA LABORAL</option>
-                        <option value="GRUPO ALARCON">GRUPO ALARCON</option>
-                        <option value="HUMAN CAPITAL">HUMAN CAPITAL</option>
-                        <option value="INTEGRANDO TALENTO">INTEGRANDO TALENTO</option>
-                        <option value="TALENTO CONECTA">TALENTO CONECTA</option>
-                        <option value="TALENTO Y DESARROLLO">TALENTO Y DESARROLLO</option>
-                        <option value="TALENTO MEXICANO">TALENTO MEXICANO</option>
-                        <option value="VALORES HUMANOS">VALORES HUMANOS</option>
+                        <option value="MARCO MKT">MARCO MKT</option>
+                        <option value="MAP">MAP</option>
+                        <option value="MP MARKETING">MP MARKETING</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label for="reclutadorProceso">Reclutador Proceso:</label>
-                    <input type="text" id="reclutadorProceso" name="reclutadorProceso" required>
+                    <span class="error-message" id="errorReclutadorProceso"></span>
                 </div>
             </div>
             <button type="submit" id="submitButton">Registrar Candidato</button>
         </form>
+
         <div id="responseMessage"></div>
+        <div id="submissionStatusMessage"></div>
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+            <button class="reset-button" id="newRegistrationButton">Registrar otro candidato</button>
+        </div>
         <button class="back-button" onclick="window.location.href='index.html'">Regresar al Inicio</button>
     </div>
 
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxOcYPTdzF5Knf3V5lINCqsVCtZRAjIK8IeDIDXSWuumKBVwO_sKwkip_bbDzYQ0_pkaA/exec'; // ¡ACTUALIZADO CON LA NUEVA URL FUNCIONAL!
-        const form = document.forms['submit-to-google-sheet'];
+        const form = document.getElementById('myForm');
         const responseMessageDiv = document.getElementById('responseMessage');
+        const submissionStatusMessageDiv = document.getElementById('submissionStatusMessage');
+        const newRegistrationButton = document.getElementById('newRegistrationButton');
+        const actionButtonsDiv = document.getElementById('actionButtons');
         const submitButton = document.getElementById('submitButton');
 
+        // Función para mostrar un mensaje de error debajo del campo
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerText = message;
+                element.style.display = 'block';
+                let inputOrSelect = element.previousElementSibling;
+                // Para radio groups, el elemento a marcar 'invalid' es el contenedor del grupo
+                if (elementId.includes('AgenciaContratacion') || elementId.includes('RegionTrabajo')) {
+                    inputOrSelect = document.getElementById(elementId.replace('error', 'radioGroup'));
+                }
+                if (inputOrSelect) {
+                    inputOrSelect.classList.add('invalid');
+                }
+            }
+        }
+
+        // Función para limpiar el mensaje de error y el estilo del campo
+        function clearError(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerText = '';
+                element.style.display = 'none';
+                let inputOrSelect = element.previousElementSibling;
+                if (elementId.includes('AgenciaContratacion') || elementId.includes('RegionTrabajo')) {
+                    inputOrSelect = document.getElementById(elementId.replace('error', 'radioGroup'));
+                }
+                if (inputOrSelect) {
+                    inputOrSelect.classList.remove('invalid');
+                }
+            }
+        }
+
+        // Función de validación de formato DD/MM/AAAA
+        function isValidDateFormat(dateString) {
+            const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            const match = dateString.match(regex);
+            if (!match) return false;
+
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10);
+            const year = parseInt(match[3], 10);
+
+            const date = new Date(year, month - 1, day); // Month is 0-indexed
+            return date.getFullYear() === year && (date.getMonth() + 1) === month && date.getDate() === day;
+        }
+
+        // Función para comparar fechas
+        function compareDates(date1String, date2String) {
+            const [day1, month1, year1] = date1String.split('/').map(Number);
+            const [day2, month2, year2] = date2String.split('/').map(Number);
+
+            const date1 = new Date(year1, month1 - 1, day1);
+            const date2 = new Date(year2, month2 - 1, day2);
+
+            return date1 <= date2; // true if date1 is <= date2
+        }
+
+        // --- Funciones de validación para cada campo ---
+        function validateFechaContrato() {
+            const input = document.getElementById('fechaContrato');
+            const value = input.value.trim();
+            if (!isValidDateFormat(value)) {
+                showError('errorFechaContrato', 'Formato de fecha inválido (DD/MM/AAAA) o fecha no válida.');
+                return false;
+            }
+            clearError('errorFechaContrato');
+            return true;
+        }
+
+        function validateFechaIngreso() {
+            const input = document.getElementById('fechaIngreso');
+            const value = input.value.trim();
+            const fechaContrato = document.getElementById('fechaContrato').value.trim();
+
+            let isValid = true;
+
+            if (!isValidDateFormat(value)) {
+                showError('errorFechaIngreso', 'Formato de fecha inválido (DD/MM/AAAA) o fecha no válida.');
+                isValid = false;
+            } else if (isValidDateFormat(fechaContrato) && !compareDates(fechaContrato, value)) {
+                showError('errorFechaIngreso', 'La fecha de ingreso no puede ser anterior a la fecha de contrato.');
+                isValid = false;
+            } else {
+                clearError('errorFechaIngreso');
+            }
+            return isValid;
+        }
+
+        function validateTextUppercase(inputElementId, errorElementId) {
+            const input = document.getElementById(inputElementId);
+            const value = input.value.trim();
+            if (value === '' || value !== value.toUpperCase()) {
+                showError(errorElementId, 'Este campo es requerido y debe estar en MAYÚSCULAS.');
+                return false;
+            }
+            clearError(errorElementId);
+            return true;
+        }
+
+        function validateTelefono() {
+            const input = document.getElementById('telefono');
+            const value = input.value.trim();
+            const regex = /^\d{10}$/; // 10 dígitos numéricos
+            if (!regex.test(value)) {
+                showError('errorTelefono', 'Ingrese 10 dígitos numéricos sin espacios ni guiones.');
+                return false;
+            }
+            clearError('errorTelefono');
+            return true;
+        }
+
+        function validateEmail() {
+            const input = document.getElementById('email');
+            const value = input.value.trim();
+            const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!regex.test(value)) {
+                showError('errorEmail', 'Ingrese un formato de correo válido (usuario@dominio.tld).');
+                return false;
+            }
+            clearError('errorEmail');
+            return true;
+        }
+
+        function validateCURP() {
+            const input = document.getElementById('curp');
+            const value = input.value.trim();
+            const regex = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d{1}$/;
+            if (!regex.test(value)) {
+                showError('errorCurp', 'CURP inválido. Debe tener 18 caracteres alfanuméricos y estar en MAYÚSCULAS.');
+                return false;
+            }
+            clearError('errorCurp');
+            return true;
+        }
+
+        function validateNSS() {
+            const input = document.getElementById('nss');
+            const value = input.value.trim();
+            const regex = /^\d{11}$/; // 11 dígitos numéricos
+            if (!regex.test(value)) {
+                showError('errorNss', 'Número de Seguridad Social inválido. Ingrese 11 dígitos numéricos.');
+                return false;
+            }
+            clearError('errorNss');
+            return true;
+        }
+
+        function validateRadioGroup(groupName, errorElementId, radioGroupDivId) {
+            const radios = document.querySelectorAll(`input[name="${groupName}"]`);
+            const isChecked = Array.from(radios).some(radio => radio.checked);
+            const radioGroupDiv = document.getElementById(radioGroupDivId);
+            if (!isChecked) {
+                showError(errorElementId, 'Por favor, seleccione una opción.');
+                if (radioGroupDiv) radioGroupDiv.classList.add('invalid');
+                return false;
+            }
+            clearError(errorElementId);
+            if (radioGroupDiv) radioGroupDiv.classList.remove('invalid');
+            return true;
+        }
+
+        function validateSelect(selectId, errorElementId) {
+            const select = document.getElementById(selectId);
+            if (select.value === "") {
+                showError(errorElementId, 'Por favor, seleccione una opción.');
+                return false;
+            }
+            clearError(errorElementId);
+            return true;
+        }
+
+        // --- Función principal de validación del formulario ---
+        function validateForm() {
+            let isValid = true;
+
+            // Validaciones individuales.
+            isValid = validateFechaContrato() && isValid;
+            isValid = validateFechaIngreso() && isValid; // Depende de validateFechaContrato
+
+            isValid = validateTextUppercase('apellidoPaterno', 'errorApellidoPaterno') && isValid;
+            isValid = validateTextUppercase('apellidoMaterno', 'errorApellidoMaterno') && isValid;
+            isValid = validateTextUppercase('nombre', 'errorNombre') && isValid;
+            isValid = validateTelefono() && isValid;
+            isValid = validateEmail() && isValid;
+            isValid = validateCURP() && isValid;
+            isValid = validateNSS() && isValid;
+
+            isValid = validateRadioGroup('agenciaContratacion', 'errorAgenciaContratacion', 'radioGroupAgencia') && isValid;
+            isValid = validateRadioGroup('regionTrabajo', 'errorRegionTrabajo', 'radioGroupRegion') && isValid;
+            isValid = validateSelect('estadoTrabajo', 'errorEstadoTrabajo') && isValid;
+            isValid = validateSelect('ciudadTrabajo', 'errorCiudadTrabajo') && isValid;
+            isValid = validateSelect('reclutadorProceso', 'errorReclutadorProceso') && isValid;
+
+            return isValid;
+        }
+
+        // --- Lógica para la restricción de horario de envío (siempre abierto para depuración) ---
+        function checkSubmissionTime() {
+            // Actualmente el formulario SIEMPRE permite el envío para facilitar la depuración.
+            // Si necesitas activar la restricción de tiempo, puedes descomentar el código original aquí.
+            submissionStatusMessageDiv.style.display = 'none';
+            submitButton.disabled = false;
+            return true;
+        }
+
+        // --- Event Listeners para validación en tiempo real (al perder el foco y al cambiar) ---
+        document.getElementById('fechaContrato').addEventListener('blur', validateFechaContrato);
+        document.getElementById('fechaIngreso').addEventListener('blur', validateFechaIngreso);
+        document.getElementById('apellidoPaterno').addEventListener('blur', () => validateTextUppercase('apellidoPaterno', 'errorApellidoPaterno'));
+        document.getElementById('apellidoMaterno').addEventListener('blur', () => validateTextUppercase('apellidoMaterno', 'errorApellidoMaterno'));
+        document.getElementById('nombre').addEventListener('blur', () => validateTextUppercase('nombre', 'errorNombre'));
+        document.getElementById('telefono').addEventListener('blur', validateTelefono);
+        document.getElementById('email').addEventListener('blur', validateEmail);
+        document.getElementById('curp').addEventListener('blur', validateCURP);
+        document.getElementById('nss').addEventListener('blur', validateNSS);
+
+        document.getElementById('estadoTrabajo').addEventListener('change', () => validateSelect('estadoTrabajo', 'errorEstadoTrabajo'));
+        document.getElementById('ciudadTrabajo').addEventListener('change', () => validateSelect('ciudadTrabajo', 'errorCiudadTrabajo'));
+        document.getElementById('reclutadorProceso').addEventListener('change', () => validateSelect('reclutadorProceso', 'errorReclutadorProceso'));
+
+        document.getElementById('radioGroupRegion').addEventListener('change', () => validateRadioGroup('regionTrabajo', 'errorRegionTrabajo', 'radioGroupRegion'));
+        document.getElementById('radioGroupAgencia').addEventListener('change', () => validateRadioGroup('agenciaContratacion', 'errorAgenciaContratacion', 'radioGroupAgencia'));
+
+
+        // --- Event Listener para el envío del formulario ---
         form.addEventListener('submit', async e => {
             e.preventDefault(); // Previene el envío por defecto del formulario
 
-            displayMessage('Registrando candidato... por favor, espera.', 'loading');
-            submitButton.disabled = true; // Deshabilita el botón mientras se procesa
+            actionButtonsDiv.style.display = 'none';
+
+            if (!checkSubmissionTime()) {
+                responseMessageDiv.style.display = 'none';
+                return;
+            }
+
+            if (!validateForm()) {
+                responseMessageDiv.classList.remove('loading', 'success');
+                responseMessageDiv.classList.add('error');
+                responseMessageDiv.style.display = 'block';
+                responseMessageDiv.innerText = 'Por favor, corrige los errores en el formulario antes de enviar.';
+                return;
+            }
 
             const formData = new FormData(form);
             const data = {};
@@ -289,10 +707,11 @@
             try {
                 const response = await fetch(scriptURL, {
                     method: 'POST',
+                    mode: 'cors', // ¡Cambiado a 'cors' para permitir preflight y leer la respuesta!
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json' // ¡Envío como JSON!
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data) // Convertir el objeto JS a JSON string
                 });
 
                 const resultText = await response.text(); 
@@ -301,6 +720,7 @@
                     displayMessage(resultText, 'success');
                     form.reset(); // Limpiar el formulario en caso de éxito
                 } else {
+                    // Si hay un error HTTP, muestra el estado y el mensaje del servidor
                     displayMessage(`Error (${response.status} ${response.statusText || ''}): ${resultText}`, 'error');
                     console.error('Error al registrar candidato:', response.status, response.statusText, resultText);
                 }
@@ -322,6 +742,28 @@
                 responseMessageDiv.classList.add(type);
             }
         }
+
+        // Event listener para el botón "Registrar otro candidato"
+        newRegistrationButton.addEventListener('click', function() {
+            form.reset();
+            responseMessageDiv.style.display = 'none';
+            actionButtonsDiv.style.display = 'none';
+            // Limpiar todos los mensajes de error existentes al resetear
+            document.querySelectorAll('.error-message').forEach(el => clearError(el.id));
+            document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+            checkSubmissionTime();
+        });
+
+        // Limpiar errores y chequear el tiempo de envío al cargar la página
+        window.addEventListener('load', () => {
+             document.querySelectorAll('.error-message').forEach(el => clearError(el.id));
+             document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+             checkSubmissionTime();
+        });
+
+        // Ejecutar la verificación de tiempo periódicamente (cada minuto)
+        setInterval(checkSubmissionTime, 60 * 1000);
+
     </script>
 </body>
 </html>
